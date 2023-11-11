@@ -1,0 +1,5 @@
+add /etc/hosts "127.0.0.1 localhost" "127.0.0.1 mylocal"
+change ~/.bashrc "export JAVA_HOME=" "export JAVA_HOME=/usr/lib/jvm/java-8-openjdk"
+uncomment /etc/sysctl.conf "#net.ipv4.ip_forward=1" "net.ipv4.ip_forward=1"
+comment /etc/httpd/conf/httpd.conf "LoadModule rewrite_module modules/mod_rewrite.so" "#LoadModule rewrite_module modules/mod_rewrite.so"
+regex_replace ~/.bashrc "^export JAVA_HOME=.*" "export JAVA_HOME=/usr/lib/jvm/java-8-openjdk"
