@@ -1,23 +1,9 @@
 #!/bin/bash
 
-# Expand the tilde to $HOME in the input paths
+# Function to expand the tilde to $HOME in the input paths
 expand_path() {
     local path=$1
     echo $(eval echo $path)
-}
-
-# Define the URL where the change instructions file is located
-CONFIG_CHANGES_URL="https://raw.githubusercontent.com/Johnny-Larue/debian-setup-things/main/alter_config_files/change_config_data.txt"
-
-# Function to download the change instructions file
-download_config_changes() {
-    echo "Downloading configuration changes file..."
-    if curl -o change_config_data.txt "$CONFIG_CHANGES_URL"; then
-        echo "Configuration changes file downloaded successfully."
-    else
-        echo "Failed to download the configuration changes file."
-        exit 1
-    fi
 }
 
 # Function to backup a file with a timestamp
@@ -37,6 +23,37 @@ print_modification() {
     echo -e "\e[32m[MODIFICATION]\e[0m \e[1mType:\e[0m $change_type \e[1mFile:\e[0m $target_file \e[1mText:\e[0m \"$text\" \e[1mComment:\e[0m \"$comment\""
 }
 
+# Function to append a comment to a line
+append_comment() {
+    local text=$1
+    local comment=$2
+    # Prepend # to comment text if it's not empty
+    [[ ! -z "$comment" ]] && comment="# $comment"
+    echo "$text $comment"
+}
+
+# Function to add or replace text in the target file
+modify_file() {
+    local target_file=$1
+    local search_text=$2
+    local modification_text=$3
+    local comment_text=$4
+    local change_type=$5
+
+    if ! grep -Fq "$search_text" "$target_file"; then
+        case $change_type in
+            add)
+                printf "%s\n" "$(append_comment "$modification_text" "$comment_text")" >> "$target_file"
+                ;;
+            change)
+                sed -i "s|${search_text}|$(append_comment "$modification_text" "$comment_text")|g" "$target_file"
+                ;;
+            # Other change types can be added here
+        esac
+        print_modification "$change_type" "$target_file" "$modification_text" "$comment_text"
+    fi
+}
+
 # Check if dry run mode is activated
 DRY_RUN=false
 if [ "$1" == "--dry-run" ]; then
@@ -45,59 +62,28 @@ if [ "$1" == "--dry-run" ]; then
 fi
 
 # Download the configuration changes file before processing
-download_config_changes
+# Function to download should be defined here if needed
+
+# Check if the configuration changes file exists
+if [ ! -f "change_config_data.txt" ]; then
+    echo "Configuration changes file does not exist."
+    exit 1
+fi
 
 # Read the configuration changes file line by line
 while IFS='|' read -r change_type target_file search_text modification_text comment_text; do
     target_file=$(expand_path "$target_file")
 
-    # Prepend # to comment text if it's not empty
-    comment_text=${comment_text:+# $comment_text}
-
-    # Perform a dry run or make actual changes
     if [ "$DRY_RUN" = true ]; then
         print_modification "$change_type" "$target_file" "$modification_text" "$comment_text"
     else
-        # Check if the target file exists
         if [ ! -f "$target_file" ]; then
             echo -e "\e[31mTarget file does not exist:\e[0m $target_file"
             continue
         fi
 
-        # Backup the file before changes
         backup_file "$target_file"
-
-        # Apply the change based on the type
-        case $change_type in
-            add)
-                if ! grep -Fq "$search_text" "$target_file"; then
-                    # Use printf instead of echo to handle special characters
-                    printf "%s\n" "$modification_text # $comment_text" >> "$target_file"
-                    print_modification "$change_type" "$target_file" "$modification_text" "$comment_text"
-                fi
-                ;;
-            change)
-                if grep -Fq "$search_text" "$target_file"; then
-                    sed -i "s|${search_text}|${modification_text} # $comment_text|g" "$target_file"
-                    print_modification "$change_type" "$target_file" "$modification_text" "$comment_text"
-                fi
-                ;;
-            uncomment)
-                sed -i "/${search_text}/s/^#[[:space:]]*//g" "$target_file"
-                print_modification "$change_type" "$target_file" "$search_text" "$comment_text"
-                ;;
-            comment)
-                sed -i "/${search_text}/s/^/#/g" "$target_file"
-                print_modification "$change_type" "$target_file" "$search_text" "$comment_text"
-                ;;
-            regex_replace)
-                sed -E -i "s|${search_text}|${modification_text} # $comment_text|g" "$target_file"
-                print_modification "$change_type" "$target_file" "$modification_text" "$comment_text"
-                ;;
-            *)
-                echo -e "\e[31mUnsupported change type:\e[0m $change_type"
-                ;;
-        esac
+        modify_file "$target_file" "$search_text" "$modification_text" "$comment_text" "$change_type"
     fi
 done < "change_config_data.txt"
 
