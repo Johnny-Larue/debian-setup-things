@@ -28,6 +28,9 @@ backup_file() {
     cp "$file" "$backup"
 }
 
+# Prepend # to comment text if it's not empty
+comment_text=${comment_text:+# $comment_text}
+
 # Function to print modification message
 print_modification() {
     local change_type=$1
