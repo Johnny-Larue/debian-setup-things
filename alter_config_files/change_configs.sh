@@ -1,5 +1,11 @@
 #!/bin/bash
 
+# Expand the tilde to $HOME in the input paths
+expand_path() {
+    local path=$1
+    echo $(eval echo $path)
+}
+
 # Define the URL where the change instructions file is located
 CONFIG_CHANGES_URL="https://raw.githubusercontent.com/Johnny-Larue/debian-setup-things/main/alter_config_files/change_config_data.txt"
 
@@ -42,12 +48,11 @@ fi
 download_config_changes
 
 # Read the configuration changes file line by line
-while IFS= read -r line
-do
+while IFS= read -r line; do
     # Parse the line into variables
     read -ra ADDR <<< "$line"
     change_type=${ADDR[0]}
-    target_file=${ADDR[1]}
+    target_file=$(expand_path ${ADDR[1]})
     search_text=${ADDR[2]}
     modification_text=${ADDR[3]}
     comment_text=${ADDR[4]}
@@ -56,11 +61,11 @@ do
     if [ "$DRY_RUN" = true ]; then
         print_modification "$change_type" "$target_file" "$modification_text" "$comment_text"
     else
-        # Check if the target file exists
-        if [ ! -f "$target_file" ]; then
-            echo -e "\e[31mTarget file does not exist:\e[0m $target_file"
-            continue
-        fi
+    # Check if the target file exists
+    if [ ! -f "$target_file" ]; then
+        echo -e "\e[31mTarget file does not exist:\e[0m $target_file"
+        continue
+    fi
 
         # Backup the file before changes
         backup_file "$target_file"
