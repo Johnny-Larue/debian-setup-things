@@ -1,1 +1,1 @@
-add ~/.bashrc "PS1='\n[\[\e[93m\]\d \t\[\e[0m\]]\n\[\e[38;5;154m\]\u@\H\[\e[0m\]:\[\e[38;5;117m\]\w\[\e[38;5;214m\]\$ \[\e[0m\]'" "Cool custom prompt style"
+add|~/.bashrc|PS1='\n[\[\e[93m\]\d \t\[\e[0m\]]\n\[\e[38;5;154m\]\u@\H\[\e[0m\]:\[\e[38;5;117m\]\w\[\e[38;5;214m\]\$ \[\e[0m\]'|Cool custom prompt style
