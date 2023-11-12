@@ -1,5 +1,1 @@
-add /etc/hosts "127.0.0.1 localhost" "127.0.0.1 mylocal"
-change ~/.bashrc "export JAVA_HOME=" "export JAVA_HOME=/usr/lib/jvm/java-8-openjdk"
-uncomment /etc/sysctl.conf "#net.ipv4.ip_forward=1" "net.ipv4.ip_forward=1"
-comment /etc/httpd/conf/httpd.conf "LoadModule rewrite_module modules/mod_rewrite.so" "#LoadModule rewrite_module modules/mod_rewrite.so"
-regex_replace ~/.bashrc "^export JAVA_HOME=.*" "export JAVA_HOME=/usr/lib/jvm/java-8-openjdk"
+add ~/.bashrc "PS1='\n[\[\e[93m\]\d \t\[\e[0m\]]\n\[\e[38;5;154m\]\u@\H\[\e[0m\]:\[\e[38;5;117m\]\w\[\e[38;5;214m\]\$ \[\e[0m\]'" "Cool custom prompt style"
