@@ -4,7 +4,7 @@ alias c='clear'
 alias ls='ls --color=auto'
  
 ## Use a long listing format ##
-alias ll='ls -lad .*'
+alias ll='ls -la'
  
 ## get rid of command not found ##
 alias cd..='cd ..'
