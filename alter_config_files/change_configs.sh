@@ -48,24 +48,18 @@ fi
 download_config_changes
 
 # Read the configuration changes file line by line
-while IFS= read -r line; do
-    # Parse the line into variables
-    read -ra ADDR <<< "$line"
-    change_type=${ADDR[0]}
-    target_file=$(expand_path ${ADDR[1]})
-    search_text=${ADDR[2]}
-    modification_text=${ADDR[3]}
-    comment_text=${ADDR[4]}
+while IFS='|' read -r change_type target_file search_text modification_text comment_text; do
+    target_file=$(expand_path "$target_file")
 
     # Perform a dry run or make actual changes
     if [ "$DRY_RUN" = true ]; then
         print_modification "$change_type" "$target_file" "$modification_text" "$comment_text"
     else
-    # Check if the target file exists
-    if [ ! -f "$target_file" ]; then
-        echo -e "\e[31mTarget file does not exist:\e[0m $target_file"
-        continue
-    fi
+        # Check if the target file exists
+        if [ ! -f "$target_file" ]; then
+            echo -e "\e[31mTarget file does not exist:\e[0m $target_file"
+            continue
+        fi
 
         # Backup the file before changes
         backup_file "$target_file"
@@ -74,7 +68,8 @@ while IFS= read -r line; do
         case $change_type in
             add)
                 if ! grep -Fq "$search_text" "$target_file"; then
-                    echo "$modification_text # $comment_text" >> "$target_file"
+                    # Use printf instead of echo to handle special characters
+                    printf "%s\n" "$modification_text # $comment_text" >> "$target_file"
                     print_modification "$change_type" "$target_file" "$modification_text" "$comment_text"
                 fi
                 ;;
