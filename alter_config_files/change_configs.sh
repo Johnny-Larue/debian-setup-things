@@ -28,9 +28,6 @@ backup_file() {
     cp "$file" "$backup"
 }
 
-# Prepend # to comment text if it's not empty
-comment_text=${comment_text:+# $comment_text}
-
 # Function to print modification message
 print_modification() {
     local change_type=$1
@@ -53,6 +50,9 @@ download_config_changes
 # Read the configuration changes file line by line
 while IFS='|' read -r change_type target_file search_text modification_text comment_text; do
     target_file=$(expand_path "$target_file")
+
+    # Prepend # to comment text if it's not empty
+    comment_text=${comment_text:+# $comment_text}
 
     # Perform a dry run or make actual changes
     if [ "$DRY_RUN" = true ]; then
