@@ -1,12 +1,25 @@
 #!/bin/bash
 
-# Function to print modification message (dry run mode)
-print_modification_dry_run() {
-    local change_type=$1
-    local target_file=$2
-    local text=$3
-    local comment=$4
-    echo -e "\e[32m[DRY RUN] Would apply \e[0m\e[1mType:\e[0m $change_type \e[1mFile:\e[0m $target_file \e[1mText:\e[0m \"$text\" \e[1mComment:\e[0m \"$comment\""
+# Define the URL where the change instructions file is located
+CONFIG_CHANGES_URL="https://raw.githubusercontent.com/Johnny-Larue/debian-setup-things/main/alter_config_files/change_config_data.txt"
+
+# Function to download the change instructions file
+download_config_changes() {
+    echo "Downloading configuration changes file..."
+    if curl -o change_config_data.txt "$CONFIG_CHANGES_URL"; then
+        echo "Configuration changes file downloaded successfully."
+    else
+        echo "Failed to download the configuration changes file."
+        exit 1
+    fi
+}
+
+# Function to backup a file with a timestamp
+backup_file() {
+    local file=$1
+    local backup="${file}.$(date +%Y%m%d%H%M%S)"
+    echo -e "\e[36mBackup created:\e[0m $backup"
+    cp "$file" "$backup"
 }
 
 # Function to print modification message
@@ -25,6 +38,9 @@ if [ "$1" == "--dry-run" ]; then
     echo -e "\e[33mDry run mode activated. No changes will be made.\e[0m"
 fi
 
+# Download the configuration changes file before processing
+download_config_changes
+
 # Read the configuration changes file line by line
 while IFS= read -r line
 do
@@ -38,7 +54,7 @@ do
 
     # Perform a dry run or make actual changes
     if [ "$DRY_RUN" = true ]; then
-        print_modification_dry_run "$change_type" "$target_file" "$modification_text" "$comment_text"
+        print_modification "$change_type" "$target_file" "$modification_text" "$comment_text"
     else
         # Check if the target file exists
         if [ ! -f "$target_file" ]; then
@@ -47,8 +63,7 @@ do
         fi
 
         # Backup the file before changes
-        local backup_file="${target_file}.$(date +%Y%m%d%H%M%S)"
-        cp "$target_file" "$backup_file" && echo -e "\e[36mBackup created:\e[0m $backup_file"
+        backup_file "$target_file"
 
         # Apply the change based on the type
         case $change_type in
